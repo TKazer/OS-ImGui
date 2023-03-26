@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+/.vs/OS-ImGui
+/Debug
+/OS-ImGui/Debug
+/OS-ImGui/x64/Debug
+/OS-ImGui/imgui.ini
+/x64/Debug
