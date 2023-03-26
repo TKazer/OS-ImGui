@@ -320,7 +320,7 @@ namespace OSImGui
         float Count = 30;
         float Angle = 360 * Proportion;
         float IncreaseAngle = Angle / Count;
-        float Alpha, Beta;
+        float Alpha;
 
         Alpha = -Angel - Angle / 2;
 
