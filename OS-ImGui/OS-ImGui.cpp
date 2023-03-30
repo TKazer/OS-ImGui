@@ -208,7 +208,20 @@ namespace OSImGui
         Window.Pos = DestWindow.Pos = Vec2(static_cast<float>(Point.x), static_cast<float>(Point.y));
         Window.Size = DestWindow.Size = Vec2(static_cast<float>(Rect.right), static_cast<float>(Rect.bottom));
 
-        return SetWindowPos(Window.hWnd, HWND_TOPMOST, Window.Pos.x, Window.Pos.y, Window.Size.x, Window.Size.y, SWP_SHOWWINDOW);
+        SetWindowPos(Window.hWnd, HWND_TOPMOST, Window.Pos.x, Window.Pos.y, Window.Size.x, Window.Size.y, SWP_SHOWWINDOW);
+        
+        // ¿ØÖÆ´°¿Ú×´Ì¬ÇÐ»»
+        POINT MousePos;
+        GetCursorPos(&MousePos);
+        ScreenToClient(Window.hWnd, &MousePos);
+        ImGui::GetIO().MousePos.x = MousePos.x;
+        ImGui::GetIO().MousePos.y = MousePos.y;
+
+        if (ImGui::GetIO().WantCaptureMouse)
+            SetWindowLong(Window.hWnd, GWL_EXSTYLE, GetWindowLong(Window.hWnd, GWL_EXSTYLE) & (~WS_EX_LAYERED));
+        else
+            SetWindowLong(Window.hWnd, GWL_EXSTYLE, GetWindowLong(Window.hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+        return true;
     }
 
     bool OSImGui_Base::InitImGui()
@@ -218,7 +231,6 @@ namespace OSImGui
 
         ImGui::StyleColorsDark();
         io.LogFilename = nullptr;
-        ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.5f, 0.5f, 0.5f, 0.8f);
 
         if (!ImGui_ImplWin32_Init(Window.hWnd))
             return false;
