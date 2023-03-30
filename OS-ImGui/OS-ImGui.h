@@ -4,6 +4,8 @@
 #include <functional>
 #include <codecvt>
 #include <vector>
+#include <dwmapi.h>
+#pragma comment(lib,"dwmapi.lib")
 
 /****************************************************
 * Copyright (C)	: Liv
@@ -84,12 +86,12 @@ namespace OSImGui
 	{
 	public:
 		// 文本
-		void Text(std::string Text, Vec2 Pos, ImColor Color);
+		void Text(std::string Text, Vec2 Pos, ImColor Color, float FontSize = 15, bool KeepCenter = false);
 		// 描边文本
-		void StrokeText(std::string Text, Vec2 Pos, ImColor Color);
+		void StrokeText(std::string Text, Vec2 Pos, ImColor Color, float FontSize = 15, bool KeepCenter = false);
 		// 矩形
 		void Rectangle(Vec2 Pos, Vec2 Size, ImColor Color, float Thickness, float Rounding = 0);
-		void RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding = 0);
+		void RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding = 0, float Nums = 15);
 		// 线
 		void Line(Vec2 From, Vec2 To, ImColor Color, float Thickness);
 		// 圆形
@@ -99,6 +101,8 @@ namespace OSImGui
 		void Arc(Vec2 Pos, float Radius, ImColor Color, float Angel, float Proportion, float Thickness);
 		// 连接点
 		void ConnectPoints(std::vector<Vec2> Points, ImColor Color, float Thickness);
+		// 圆弧
+		void Arc(ImVec2 Center, float Radius, ImColor Color, float Thickness, float Aangle_begin, float Angle_end, float Nums = 15);
 		// 勾选框
 		void MyCheckBox(const char* str_id, bool* v);
 		void MyCheckBox2(const char* str_id, bool* v);

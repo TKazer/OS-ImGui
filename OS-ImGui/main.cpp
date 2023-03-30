@@ -23,7 +23,7 @@ void DrawCallBack()
 int main()
 {
 	OSImGui::OSImGui::get().NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
-	//OSImGui::OSImGui::get().AttachAnotherWindow("Title","", Draw);
+	//OSImGui::OSImGui::get().AttachAnotherWindow("Title","", DrawCallBack);
 	system("pause");
 	return 0;
 }

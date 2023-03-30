@@ -175,9 +175,8 @@ namespace OSImGui
         RegisterClassExW(&wc);
         if (Type == ATTACH)
         {
-            Window.hWnd = CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW, wc.lpszClassName, StringToWstring(Window.Name).c_str(), WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandle(NULL), NULL);
-            SetLayeredWindowAttributes(Window.hWnd, 0, 1.0f, LWA_ALPHA);
-            SetLayeredWindowAttributes(Window.hWnd, 0, RGB(0, 0, 0), LWA_COLORKEY);
+            Window.hWnd = CreateWindowExW(WS_EX_TOPMOST | WS_EX_TRANSPARENT, wc.lpszClassName, StringToWstring(Window.Name).c_str(), WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandle(NULL), NULL);
+            SetLayeredWindowAttributes(Window.hWnd, 0, 255, LWA_ALPHA);
         }
         else
         {
@@ -247,6 +246,12 @@ namespace OSImGui
 
         switch (msg)
         {
+        case WM_CREATE:
+            {
+                MARGINS     Margin = { -1 };
+                DwmExtendFrameIntoClientArea(hWnd, &Margin);
+                break;
+            }
         case WM_SIZE:
             if (Device.g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
             {
@@ -276,18 +281,27 @@ namespace OSImGui
 // OS-ImGui Draw »æÖÆ¹¦ÄÜ
 namespace OSImGui
 {
-    void OSImGui::Text(std::string Text, Vec2 Pos, ImColor Color)
+    void OSImGui::Text(std::string Text, Vec2 Pos, ImColor Color, float FontSize, bool KeepCenter)
     {
-        ImGui::GetForegroundDrawList()->AddText(Pos.ToImVec2(), Color, Text.c_str());
+        if (!KeepCenter)
+        {
+            ImGui::GetForegroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos.ToImVec2(), Color, Text.c_str());
+        }
+        else
+        {
+            float TextWidth = ImGui::GetFont()->CalcTextSizeA(FontSize, FLT_MAX, 0.f, Text.c_str()).x;
+            ImVec2 Pos_ = { Pos.x - TextWidth / 2,Pos.y };
+            ImGui::GetForegroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos_, Color, Text.c_str());
+        }
     }
 
-    void OSImGui::StrokeText(std::string Text, Vec2 Pos, ImColor Color)
+    void OSImGui::StrokeText(std::string Text, Vec2 Pos, ImColor Color, float FontSize, bool KeepCenter)
     {
-        this->Text(Text, Vec2(Pos.x - 1, Pos.y + 1), ImColor(0, 0, 0));
-        this->Text(Text, Vec2(Pos.x - 1, Pos.y - 1), ImColor(0, 0, 0));
-        this->Text(Text, Vec2(Pos.x + 1, Pos.y + 1), ImColor(0, 0, 0));
-        this->Text(Text, Vec2(Pos.x + 1, Pos.y - 1), ImColor(0, 0, 0));
-        this->Text(Text, Pos, Color);
+        this->Text(Text, Vec2(Pos.x - 1, Pos.y + 1), ImColor(0, 0, 0), FontSize, KeepCenter);
+        this->Text(Text, Vec2(Pos.x - 1, Pos.y - 1), ImColor(0, 0, 0), FontSize, KeepCenter);
+        this->Text(Text, Vec2(Pos.x + 1, Pos.y + 1), ImColor(0, 0, 0), FontSize, KeepCenter);
+        this->Text(Text, Vec2(Pos.x + 1, Pos.y - 1), ImColor(0, 0, 0), FontSize, KeepCenter);
+        this->Text(Text, Pos, Color, FontSize, KeepCenter);
     }
 
     void OSImGui::Rectangle(Vec2 Pos, Vec2 Size, ImColor Color, float Thickness, float Rounding)
@@ -295,9 +309,30 @@ namespace OSImGui
         ImGui::GetForegroundDrawList()->AddRect(Pos.ToImVec2(), ImVec2(Pos.x + Size.x, Pos.y + Size.y), Color, Rounding, 0, Thickness);
     }
 
-    void OSImGui::RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding)
+    void OSImGui::RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding, float Nums)
     {
-        ImGui::GetForegroundDrawList()->AddRectFilled(Pos.ToImVec2(), ImVec2(Pos.x + Size.x, Pos.y + Size.y), Color, Rounding);
+        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All;
+        ImVec2 a = Pos.ToImVec2();
+        ImVec2 b = { Pos.x + Size.x,Pos.y + Size.y };
+        Rounding = ImMin<float>(Rounding, fabsf(Size.x) * (((rounding_corners & ImDrawCornerFlags_Top) == ImDrawCornerFlags_Top) || ((rounding_corners & ImDrawCornerFlags_Bot) == ImDrawCornerFlags_Bot) ? 0.5f : 1.0f) - 1.0f);
+        Rounding = ImMin<float>(Rounding, fabsf(Size.y) * (((rounding_corners & ImDrawCornerFlags_Left) == ImDrawCornerFlags_Left) || ((rounding_corners & ImDrawCornerFlags_Right) == ImDrawCornerFlags_Right) ? 0.5f : 1.0f) - 1.0f);
+
+        if (Rounding <= 0.0f || rounding_corners == 0)
+        {
+            DrawList->PathLineTo(a);
+            DrawList->PathLineTo(ImVec2(b.x, a.y));
+            DrawList->PathLineTo(b);
+            DrawList->PathLineTo(ImVec2(a.x, b.y));
+        }
+        else
+        {
+            DrawList->PathArcTo(ImVec2(a.x + Rounding, a.y + Rounding), Rounding, IM_PI, IM_PI / 2 * 3, Nums);
+            DrawList->PathArcTo(ImVec2(b.x - Rounding, a.y + Rounding), Rounding, IM_PI / 2 * 3, IM_PI * 2, Nums);
+            DrawList->PathArcTo(ImVec2(b.x - Rounding, b.y - Rounding), Rounding, 0, IM_PI / 2, Nums);
+            DrawList->PathArcTo(ImVec2(a.x + Rounding, b.y - Rounding), Rounding, IM_PI / 2, IM_PI, Nums);
+        }
+        DrawList->PathFillConvex(Color);
     }
 
     void OSImGui::Line(Vec2 From, Vec2 To, ImColor Color, float Thickness)
@@ -346,6 +381,18 @@ namespace OSImGui
             if (i == Points.size() - 2)
                 Line(Points[i + 1], Points[0], Color, Thickness);
         }
+    }
+
+    void OSImGui::Arc(ImVec2 Center, float Radius, ImColor Color, float Thickness, float Angle_begin, float Angle_end, float Nums)
+    {
+        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        float angle = (Angle_end - Angle_begin) / Nums;
+        for (int i = 0; i < Nums; i++)
+        {
+            float angle_ = i * angle + Angle_begin - IM_PI / 2;
+            DrawList->PathLineTo({ Center.x - Radius * cos(angle_),Center.y - Radius * sin(angle_) });
+        }
+        DrawList->PathStroke(Color, false, Thickness);
     }
 
     void OSImGui::MyCheckBox(const char* str_id, bool* v)
