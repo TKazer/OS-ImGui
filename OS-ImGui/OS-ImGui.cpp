@@ -7,7 +7,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/3/26	11:32
+* @date			: 2023/4/2	12:53
 ****************************************************/
 
 // D3D11 Device
@@ -74,7 +74,7 @@ namespace OSImGui
 	void OSImGui_Base::NewWindow(std::string WindowName, Vec2 WindowSize, std::function<void()> CallBack)
 	{
 		if (!CallBack)
-			return;
+			throw OSException("CallBack is empty");
 		if (WindowName.empty())
 			Window.Name = "Window";
 
@@ -86,20 +86,25 @@ namespace OSImGui
 		CallBackFn = CallBack;
 
         if (!CreateMyWindow())
-            return;
+            throw OSException("CreateMyWindow() call failed");
 
-        if (!InitImGui())
-            return;
-
+        try {
+            InitImGui();
+        }
+        catch (OSException& e)
+        {
+            throw e;
+        }
+ 
         MainLoop();
 	}
 
 	void OSImGui_Base::AttachAnotherWindow(std::string DestWindowName, std::string DestWindowClassName, std::function<void()> CallBack)
 	{
 		if (!CallBack)
-			return;
+            throw OSException("CallBack is empty");
 		if (DestWindowName.empty() && DestWindowClassName.empty())
-			return;
+            throw OSException("DestWindowName and DestWindowClassName are empty");
 
         Window.Name = "Window";
         Window.ClassName = "WindowClass";
@@ -109,7 +114,7 @@ namespace OSImGui
             (DestWindowClassName.empty() ? NULL : DestWindowClassName.c_str()),
             (DestWindowName.empty() ? NULL : DestWindowName.c_str()));
         if (DestWindow.hWnd == NULL)
-            return;
+            throw OSException("DestWindow isn't exist");
 		DestWindow.Name = DestWindowName;
 		DestWindow.ClassName = DestWindowClassName;
 
@@ -117,10 +122,15 @@ namespace OSImGui
 		CallBackFn = CallBack;
 
         if (!CreateMyWindow())
-            return;
+            throw OSException("CreateMyWindow() call failed");
 
-        if (!InitImGui())
-            return;
+        try {
+            InitImGui();
+        }
+        catch (OSException& e)
+        {
+            throw e;
+        }
 
         MainLoop();
 	}
@@ -150,7 +160,10 @@ namespace OSImGui
             if (PeekEndMessage())
                 break;
             if (Type == ATTACH)
-                UpdateWindowData();
+            {
+                if (!UpdateWindowData())
+                    break;
+            }
 
             ImGui_ImplDX11_NewFrame();
             ImGui_ImplWin32_NewFrame();
@@ -202,6 +215,13 @@ namespace OSImGui
     {
         POINT Point{};
         RECT Rect{};
+
+        DestWindow.hWnd = FindWindowA(
+            (DestWindow.ClassName.empty() ? NULL : DestWindow.ClassName.c_str()),
+            (DestWindow.Name.empty() ? NULL : DestWindow.Name.c_str()));
+        if (DestWindow.hWnd == NULL)
+            return false;
+
         GetClientRect(DestWindow.hWnd, &Rect);
         ClientToScreen(DestWindow.hWnd, &Point);
 
@@ -233,9 +253,9 @@ namespace OSImGui
         io.LogFilename = nullptr;
 
         if (!ImGui_ImplWin32_Init(Window.hWnd))
-            return false;
+            throw OSException("ImGui_ImplWin32_Init() call failed.");
         if (!ImGui_ImplDX11_Init(Device.g_pd3dDevice, Device.g_pd3dDeviceContext))
-            return false;
+            throw OSException("ImGui_ImplDX11_Init() call failed.");
 
         return true;
     }

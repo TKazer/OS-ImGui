@@ -136,6 +136,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="OS-ImGui.h" />
+    <ClInclude Include="OS-ImGui_Exception.hpp" />
     <ClInclude Include="OS-ImGui_Struct.h" />
   </ItemGroup>
   <ItemGroup>

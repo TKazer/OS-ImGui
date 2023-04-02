@@ -22,8 +22,15 @@ void DrawCallBack()
 
 int main()
 {
-	OSImGui::OSImGui::get().NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
-	//OSImGui::OSImGui::get().AttachAnotherWindow("Title","", DrawCallBack);
+	try {
+		OSImGui::OSImGui::get().NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
+		//OSImGui::OSImGui::get().AttachAnotherWindow("Title","", DrawCallBack);
+	}
+	catch (OSImGui::OSException& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+
 	system("pause");
 	return 0;
 }
