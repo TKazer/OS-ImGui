@@ -1,8 +1,8 @@
-// dear imgui, v1.89.5 WIP
+// dear imgui, v1.89.6
 // (demo code)
 
 // Help:
-// - Read FAQ at http://dearimgui.org/faq
+// - Read FAQ at http://dearimgui.com/faq
 // - Newcomers, read 'Programmer guide' in imgui.cpp for notes on how to setup Dear ImGui in your codebase.
 // - Call and read ImGui::ShowDemoWindow() in imgui_demo.cpp. All applications in examples/ are doing that.
 // Read imgui.cpp for more details, documentation and comments.
@@ -398,23 +398,21 @@ void ImGui::ShowDemoWindow(bool* p_open)
     IMGUI_DEMO_MARKER("Help");
     if (ImGui::CollapsingHeader("Help"))
     {
-        ImGui::Text("ABOUT THIS DEMO:");
+        ImGui::SeparatorText("ABOUT THIS DEMO:");
         ImGui::BulletText("Sections below are demonstrating many aspects of the library.");
         ImGui::BulletText("The \"Examples\" menu above leads to more demo contents.");
         ImGui::BulletText("The \"Tools\" menu above gives access to: About Box, Style Editor,\n"
                           "and Metrics/Debugger (general purpose Dear ImGui debugging tool).");
-        ImGui::Separator();
 
-        ImGui::Text("PROGRAMMER GUIDE:");
+        ImGui::SeparatorText("PROGRAMMER GUIDE:");
         ImGui::BulletText("See the ShowDemoWindow() code in imgui_demo.cpp. <- you are here!");
         ImGui::BulletText("See comments in imgui.cpp.");
         ImGui::BulletText("See example applications in the examples/ folder.");
-        ImGui::BulletText("Read the FAQ at http://www.dearimgui.org/faq/");
+        ImGui::BulletText("Read the FAQ at http://www.dearimgui.com/faq/");
         ImGui::BulletText("Set 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.");
         ImGui::BulletText("Set 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.");
-        ImGui::Separator();
 
-        ImGui::Text("USER GUIDE:");
+        ImGui::SeparatorText("USER GUIDE:");
         ImGui::ShowUserGuide();
     }
 
@@ -471,6 +469,8 @@ void ImGui::ShowDemoWindow(bool* p_open)
             ImGui::SameLine(); HelpMarker("First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover");
             ImGui::Checkbox("io.ConfigDebugBeginReturnValueLoop", &io.ConfigDebugBeginReturnValueLoop);
             ImGui::SameLine(); HelpMarker("Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.");
+            ImGui::Checkbox("io.ConfigDebugIgnoreFocusLoss", &io.ConfigDebugIgnoreFocusLoss);
+            ImGui::SameLine(); HelpMarker("Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.");
 
             ImGui::TreePop();
             ImGui::Spacing();
@@ -483,13 +483,13 @@ void ImGui::ShowDemoWindow(bool* p_open)
                 "Those flags are set by the backends (imgui_impl_xxx files) to specify their capabilities.\n"
                 "Here we expose them as read-only fields to avoid breaking interactions with your backend.");
 
-            // Make a local copy to avoid modifying actual backend flags.
-            // FIXME: We don't use BeginDisabled() to keep label bright, maybe we need a BeginReadonly() equivalent..
-            ImGuiBackendFlags backend_flags = io.BackendFlags;
-            ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",           &backend_flags, ImGuiBackendFlags_HasGamepad);
-            ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",      &backend_flags, ImGuiBackendFlags_HasMouseCursors);
-            ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",       &backend_flags, ImGuiBackendFlags_HasSetMousePos);
-            ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset", &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
+            // FIXME: Maybe we need a BeginReadonly() equivalent to keep label bright?
+            ImGui::BeginDisabled();
+            ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",           &io.BackendFlags, ImGuiBackendFlags_HasGamepad);
+            ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",      &io.BackendFlags, ImGuiBackendFlags_HasMouseCursors);
+            ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",       &io.BackendFlags, ImGuiBackendFlags_HasSetMousePos);
+            ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset", &io.BackendFlags, ImGuiBackendFlags_RendererHasVtxOffset);
+            ImGui::EndDisabled();
             ImGui::TreePop();
             ImGui::Spacing();
         }
@@ -631,7 +631,7 @@ static void ShowDemoWindowWidgets()
             ImGui::Text("Tooltips:");
 
             ImGui::SameLine();
-            ImGui::SmallButton("Button");
+            ImGui::SmallButton("Basic");
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip("I am a tooltip");
 
@@ -744,7 +744,7 @@ static void ShowDemoWindowWidgets()
             static int elem = Element_Fire;
             const char* elems_names[Element_COUNT] = { "Fire", "Earth", "Air", "Water" };
             const char* elem_name = (elem >= 0 && elem < Element_COUNT) ? elems_names[elem] : "Unknown";
-            ImGui::SliderInt("slider enum", &elem, 0, Element_COUNT - 1, elem_name);
+            ImGui::SliderInt("slider enum", &elem, 0, Element_COUNT - 1, elem_name); // Use ImGuiSliderFlags_NoInput flag to disable CTRL+Click here.
             ImGui::SameLine(); HelpMarker("Using the format string parameter to display a name instead of the underlying integer.");
         }
 
@@ -1390,7 +1390,15 @@ static void ShowDemoWindowWidgets()
         {
             struct TextFilters
             {
-                // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+                // Modify character input by altering 'data->Eventchar' (ImGuiInputTextFlags_CallbackCharFilter callback)
+                static int FilterCasingSwap(ImGuiInputTextCallbackData* data)
+                {
+                    if (data->EventChar >= 'a' && data->EventChar <= 'z')       { data->EventChar = data->EventChar - 'A' - 'a'; } // Lowercase becomes uppercase
+                    else if (data->EventChar >= 'A' && data->EventChar <= 'Z')  { data->EventChar = data->EventChar + 'a' - 'A'; } // Uppercase becomes lowercase
+                    return 0;
+                }
+
+                // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i', otherwise return 1 (filter out)
                 static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
                 {
                     if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
@@ -1399,12 +1407,13 @@ static void ShowDemoWindowWidgets()
                 }
             };
 
-            static char buf1[64] = ""; ImGui::InputText("default",     buf1, 64);
-            static char buf2[64] = ""; ImGui::InputText("decimal",     buf2, 64, ImGuiInputTextFlags_CharsDecimal);
-            static char buf3[64] = ""; ImGui::InputText("hexadecimal", buf3, 64, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
-            static char buf4[64] = ""; ImGui::InputText("uppercase",   buf4, 64, ImGuiInputTextFlags_CharsUppercase);
-            static char buf5[64] = ""; ImGui::InputText("no blank",    buf5, 64, ImGuiInputTextFlags_CharsNoBlank);
-            static char buf6[64] = ""; ImGui::InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);
+            static char buf1[32] = ""; ImGui::InputText("default",     buf1, 32);
+            static char buf2[32] = ""; ImGui::InputText("decimal",     buf2, 32, ImGuiInputTextFlags_CharsDecimal);
+            static char buf3[32] = ""; ImGui::InputText("hexadecimal", buf3, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+            static char buf4[32] = ""; ImGui::InputText("uppercase",   buf4, 32, ImGuiInputTextFlags_CharsUppercase);
+            static char buf5[32] = ""; ImGui::InputText("no blank",    buf5, 32, ImGuiInputTextFlags_CharsNoBlank);
+            static char buf6[32] = ""; ImGui::InputText("casing swap", buf6, 32, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterCasingSwap); // Use CharFilter callback to replace characters.
+            static char buf7[32] = ""; ImGui::InputText("\"imgui\"",   buf7, 32, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters); // Use CharFilter callback to disable some characters.
             ImGui::TreePop();
         }
 
@@ -6369,6 +6378,22 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Shadows"))
+        {
+            ImGui::Text("Window shadows:");
+            ImGui::ColorEdit4("Color", (float*)&style.Colors[ImGuiCol_WindowShadow], ImGuiColorEditFlags_AlphaBar);
+            ImGui::SameLine();
+            HelpMarker("Same as 'WindowShadow' in Colors tab.");
+
+            ImGui::SliderFloat("Size", &style.WindowShadowSize, 0.0f, 128.0f, "%.1f");
+            ImGui::SameLine();
+            HelpMarker("Set shadow size to zero to disable shadows.");
+            ImGui::SliderFloat("Offset distance", &style.WindowShadowOffsetDist, 0.0f, 64.0f, "%.0f");
+            ImGui::SliderAngle("Offset angle", &style.WindowShadowOffsetAngle);
+
+            ImGui::EndTabItem();
+        }
+
         ImGui::EndTabBar();
     }
 
@@ -7716,6 +7741,165 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             for (int n = 0; n < points.Size; n += 2)
                 draw_list->AddLine(ImVec2(origin.x + points[n].x, origin.y + points[n].y), ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.0f);
             draw_list->PopClipRect();
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Shadows"))
+        {
+            static float shadow_thickness = 40.0f;
+            static ImVec4 shadow_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+            static bool shadow_filled = false;
+            static ImVec4 shape_color = ImVec4(0.9f, 0.6f, 0.3f, 1.0f);
+            static float shape_rounding = 0.0f;
+            static ImVec2 shadow_offset(0.0f, 0.0f);
+            static ImVec4 background_color = ImVec4(0.5f, 0.5f, 0.7f, 1.0f);
+            static bool wireframe = false;
+            static bool aa = true;
+            static int poly_shape_index = 0;
+            ImGui::Checkbox("Shadow filled", &shadow_filled);
+            ImGui::SameLine();
+            HelpMarker("This will fill the section behind the shape to shadow. It's often unnecessary and wasteful but provided for consistency.");
+            ImGui::Checkbox("Wireframe shapes", &wireframe);
+            ImGui::SameLine();
+            HelpMarker("This draws the shapes in wireframe so you can see the shadow underneath.");
+            ImGui::Checkbox("Anti-aliasing", &aa);
+
+            ImGui::DragFloat("Shadow Thickness", &shadow_thickness, 1.0f, 0.0f, 100.0f, "%.02f");
+            ImGui::SliderFloat2("Offset", (float*)&shadow_offset, -32.0f, 32.0f);
+            ImGui::SameLine();
+            HelpMarker("Note that currently circles/convex shapes do not support non-zero offsets for unfilled shadows.");
+            ImGui::ColorEdit4("Background Color", &background_color.x);
+            ImGui::ColorEdit4("Shadow Color", &shadow_color.x);
+            ImGui::ColorEdit4("Shape Color", &shape_color.x);
+            ImGui::DragFloat("Shape Rounding", &shape_rounding, 1.0f, 0.0f, 20.0f, "%.02f");
+            ImGui::Combo("Convex shape", &poly_shape_index, "Shape 1\0Shape 2\0Shape 3\0Shape 4\0Shape 4 (winding reversed)");
+
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImDrawListFlags old_flags = draw_list->Flags;
+
+            if (aa)
+                draw_list->Flags |= ~ImDrawListFlags_AntiAliasedFill;
+            else
+                draw_list->Flags &= ~ImDrawListFlags_AntiAliasedFill;
+
+            // Fill a strip of background
+            draw_list->AddRectFilled(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y), ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetWindowContentRegionMax().x, ImGui::GetCursorScreenPos().y + 200.0f), ImGui::GetColorU32(background_color));
+
+            // Rectangle
+            {
+                ImVec2 p = ImGui::GetCursorScreenPos();
+                ImGui::Dummy(ImVec2(200.0f, 200.0f));
+
+                ImVec2 r1(p.x + 50.0f, p.y + 50.0f);
+                ImVec2 r2(p.x + 150.0f, p.y + 150.0f);
+                ImDrawFlags draw_flags = shadow_filled ? ImDrawFlags_None : ImDrawFlags_ShadowCutOutShapeBackground;
+                draw_list->AddShadowRect(r1, r2, ImGui::GetColorU32(shadow_color), shadow_thickness, shadow_offset, draw_flags, shape_rounding);
+
+                if (wireframe)
+                    draw_list->AddRect(r1, r2, ImGui::GetColorU32(shape_color), shape_rounding);
+                else
+                    draw_list->AddRectFilled(r1, r2, ImGui::GetColorU32(shape_color), shape_rounding);
+            }
+
+            ImGui::SameLine();
+
+            // Circle
+            {
+                ImVec2 p = ImGui::GetCursorScreenPos();
+                ImGui::Dummy(ImVec2(200.0f, 200.0f));
+
+                // FIXME-SHADOWS: Offset forced to zero when shadow is not filled because it isn't supported
+                float off = 10.0f;
+                ImVec2 r1(p.x + 50.0f + off, p.y + 50.0f + off);
+                ImVec2 r2(p.x + 150.0f - off, p.y + 150.0f - off);
+                ImVec2 center(p.x + 100.0f, p.y + 100.0f);
+                ImDrawFlags draw_flags = shadow_filled ? ImDrawFlags_None : ImDrawFlags_ShadowCutOutShapeBackground;
+                draw_list->AddShadowCircle(center, 50.0f, ImGui::GetColorU32(shadow_color), shadow_thickness, shadow_filled ? shadow_offset : ImVec2(0.0f, 0.0f), draw_flags, 0);
+
+                if (wireframe)
+                    draw_list->AddCircle(center, 50.0f, ImGui::GetColorU32(shape_color), 0);
+                else
+                    draw_list->AddCircleFilled(center, 50.0f, ImGui::GetColorU32(shape_color), 0);
+            }
+
+            ImGui::SameLine();
+
+            // Convex shape
+            {
+                ImVec2 pos = ImGui::GetCursorScreenPos();
+                ImGui::Dummy(ImVec2(200.0f, 200.0f));
+
+                const ImVec2 poly_centre(pos.x + 50.0f, pos.y + 100.0f);
+                ImVec2 poly_points[8];
+                int poly_points_count = 0;
+
+                switch (poly_shape_index)
+                {
+                default:
+                case 0:
+                {
+                    poly_points[0] = ImVec2(poly_centre.x - 32.0f, poly_centre.y);
+                    poly_points[1] = ImVec2(poly_centre.x - 24.0f, poly_centre.y + 24.0f);
+                    poly_points[2] = ImVec2(poly_centre.x, poly_centre.y + 32.0f);
+                    poly_points[3] = ImVec2(poly_centre.x + 24.0f, poly_centre.y + 24.0f);
+                    poly_points[4] = ImVec2(poly_centre.x + 32.0f, poly_centre.y);
+                    poly_points[5] = ImVec2(poly_centre.x + 24.0f, poly_centre.y - 24.0f);
+                    poly_points[6] = ImVec2(poly_centre.x, poly_centre.y - 32.0f);
+                    poly_points[7] = ImVec2(poly_centre.x - 32.0f, poly_centre.y - 32.0f);
+                    poly_points_count = 8;
+                    break;
+                }
+                case 1:
+                {
+                    poly_points[0] = ImVec2(poly_centre.x + 40.0f, poly_centre.y - 20.0f);
+                    poly_points[1] = ImVec2(poly_centre.x, poly_centre.y + 32.0f);
+                    poly_points[2] = ImVec2(poly_centre.x - 24.0f, poly_centre.y - 32.0f);
+                    poly_points_count = 3;
+                    break;
+                }
+                case 2:
+                {
+                    poly_points[0] = ImVec2(poly_centre.x - 32.0f, poly_centre.y);
+                    poly_points[1] = ImVec2(poly_centre.x, poly_centre.y + 32.0f);
+                    poly_points[2] = ImVec2(poly_centre.x + 32.0f, poly_centre.y);
+                    poly_points[3] = ImVec2(poly_centre.x, poly_centre.y - 32.0f);
+                    poly_points_count = 4;
+                    break;
+                }
+                case 3:
+                {
+                    poly_points[0] = ImVec2(poly_centre.x - 4.0f, poly_centre.y - 20.0f);
+                    poly_points[1] = ImVec2(poly_centre.x + 12.0f, poly_centre.y + 2.0f);
+                    poly_points[2] = ImVec2(poly_centre.x + 8.0f, poly_centre.y + 16.0f);
+                    poly_points[3] = ImVec2(poly_centre.x, poly_centre.y + 32.0f);
+                    poly_points[4] = ImVec2(poly_centre.x - 16.0f, poly_centre.y - 32.0f);
+                    poly_points_count = 5;
+                    break;
+                }
+                case 4: // Same as test case 3 but with reversed winding
+                {
+                    poly_points[0] = ImVec2(poly_centre.x - 16.0f, poly_centre.y - 32.0f);
+                    poly_points[1] = ImVec2(poly_centre.x, poly_centre.y + 32.0f);
+                    poly_points[2] = ImVec2(poly_centre.x + 8.0f, poly_centre.y + 16.0f);
+                    poly_points[3] = ImVec2(poly_centre.x + 12.0f, poly_centre.y + 2.0f);
+                    poly_points[4] = ImVec2(poly_centre.x - 4.0f, poly_centre.y - 20.0f);
+                    poly_points_count = 5;
+                    break;
+                }
+                }
+
+                // FIXME-SHADOWS: Offset forced to zero when shadow is not filled because it isn't supported
+                ImDrawFlags draw_flags = shadow_filled ? ImDrawFlags_None : ImDrawFlags_ShadowCutOutShapeBackground;
+                draw_list->AddShadowConvexPoly(poly_points, poly_points_count, ImGui::GetColorU32(shadow_color), shadow_thickness, shadow_filled ? shadow_offset : ImVec2(0.0f, 0.0f), draw_flags);
+
+                if (wireframe)
+                    draw_list->AddPolyline(poly_points, poly_points_count, ImGui::GetColorU32(shape_color), true, 1.0f);
+                else
+                    draw_list->AddConvexPolyFilled(poly_points, poly_points_count, ImGui::GetColorU32(shape_color));
+            }
+
+            draw_list->Flags = old_flags;
 
             ImGui::EndTabItem();
         }

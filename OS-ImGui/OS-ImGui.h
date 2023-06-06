@@ -100,8 +100,6 @@ namespace OSImGui
 		// 圆形
 		void Circle(Vec2 Center, float Radius, ImColor Color,float Thickness, int Num = 50);
 		void CircleFilled(Vec2 Center, float Radius, ImColor Color, int Num = 50);
-		// 圆弧
-		void Arc(Vec2 Pos, float Radius, ImColor Color, float Angel, float Proportion, float Thickness);
 		// 连接点
 		void ConnectPoints(std::vector<Vec2> Points, ImColor Color, float Thickness);
 		// 圆弧
@@ -111,6 +109,10 @@ namespace OSImGui
 		void MyCheckBox2(const char* str_id, bool* v);
 		void MyCheckBox3(const char* str_id, bool* v);
 		void MyCheckBox4(const char* str_id, bool* v);
+		// 阴影矩形
+		void ShadowRectFilled(Vec2 Pos, Vec2 Size, ImColor RectColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Rounding = 0);
+		// 阴影圆形
+		void ShadowCircle(Vec2 Pos, float Radius, ImColor CircleColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Num = 30);
 	};
 }
 
