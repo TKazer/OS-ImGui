@@ -136,7 +136,9 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="OS-ImGui.h" />
+    <ClInclude Include="OS-ImGui_Base.h" />
     <ClInclude Include="OS-ImGui_Exception.hpp" />
+    <ClInclude Include="OS-ImGui_External.h" />
     <ClInclude Include="OS-ImGui_Struct.h" />
   </ItemGroup>
   <ItemGroup>
@@ -149,7 +151,8 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OS-ImGui.cpp" />
-    <ClCompile Include="OS-ImGui_Functions.cpp" />
+    <ClCompile Include="OS-ImGui_Base.cpp" />
+    <ClCompile Include="OS-ImGui_External.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

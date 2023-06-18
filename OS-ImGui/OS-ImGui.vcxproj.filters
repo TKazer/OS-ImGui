@@ -12,15 +12,15 @@
     <Filter Include="demo">
       <UniqueIdentifier>{c01b413b-627b-4447-aaf9-d4fc7a57b421}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sources\OS-ImGuiBase">
+      <UniqueIdentifier>{5929bfe0-66c4-4264-a568-6d8e31233d38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OS-ImGui.h">
       <Filter>sources</Filter>
     </ClInclude>
     <ClInclude Include="OS-ImGui_Struct.h">
-      <Filter>sources</Filter>
-    </ClInclude>
-    <ClInclude Include="OS-ImGui_Exception.hpp">
       <Filter>sources</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
@@ -47,15 +47,21 @@
     <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="OS-ImGui_External.h">
+      <Filter>sources\OS-ImGuiBase</Filter>
+    </ClInclude>
+    <ClInclude Include="OS-ImGui_Exception.hpp">
+      <Filter>sources\OS-ImGuiBase</Filter>
+    </ClInclude>
+    <ClInclude Include="OS-ImGui_Base.h">
+      <Filter>sources\OS-ImGuiBase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>demo</Filter>
     </ClCompile>
     <ClCompile Include="OS-ImGui.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="OS-ImGui_Functions.cpp">
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
@@ -78,6 +84,12 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="OS-ImGui_External.cpp">
+      <Filter>sources\OS-ImGuiBase</Filter>
+    </ClCompile>
+    <ClCompile Include="OS-ImGui_Base.cpp">
+      <Filter>sources\OS-ImGuiBase</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

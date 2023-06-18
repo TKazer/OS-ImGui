@@ -1,12 +1,5 @@
-#include "OS-ImGui_Struct.h"
-#include "OS-ImGui_Exception.hpp"
-#include <iostream>
-#include <string>
-#include <functional>
-#include <codecvt>
-#include <vector>
-#include <dwmapi.h>
-#pragma comment(lib,"dwmapi.lib")
+#pragma once
+#include "OS-ImGui_External.h"
 
 /****************************************************
 * Copyright (C)	: Liv
@@ -14,78 +7,16 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/4/2	13:16
+* @date			: 2023/6/18	11:21
 ****************************************************/
 
 namespace OSImGui
 {
-	class D3DDevice
-	{
-	public:
-		ID3D11Device* g_pd3dDevice = nullptr;
-		ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
-		IDXGISwapChain* g_pSwapChain = nullptr;
-		ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
-		bool CreateDeviceD3D(HWND hWnd);
-		void CleanupDeviceD3D();
-		void CreateRenderTarget();
-		void CleanupRenderTarget();
-	};
-
-	static D3DDevice Device;
-
-	enum WindowType
-	{
-		NEW,
-		ATTACH
-	};
-
-	class WindowData
-	{
-	public:
-		HWND  hWnd = NULL;
-		HINSTANCE hInstance;
-		std::string Name;
-		std::wstring wName;
-		std::string ClassName;
-		std::wstring wClassName;
-		Vec2 Pos;
-		Vec2 Size;
-		ImColor BgColor{ 255, 255, 255 };
-	};
-
-	class OSImGui_Base
-	{
-	private:
-		// 回调函数
-		std::function<void()> CallBackFn = nullptr;
-		// 退出标识
-		bool EndFlag = false;
-		// 启动类型
-		WindowType Type = NEW;
-	protected:
-		// 窗口数据
-		WindowData Window;
-		// 目标窗口数据
-		WindowData DestWindow;
-	public:
-		// 创建一个新窗口
-		void NewWindow(std::string WindowName, Vec2 WindowSize, std::function<void()> CallBack);
-		// 附加到另一个窗口上
-		void AttachAnotherWindow(std::string DestWindowName, std::string DestWindowClassName, std::function<void()> CallBack);
-		// 退出
-		void Quit();
-	private:
-		void MainLoop();
-		bool CreateMyWindow();
-		bool UpdateWindowData();
-		bool InitImGui();
-		void CleanImGui();
-		bool PeekEndMessage();
-		std::wstring StringToWstring(std::string& str);
-	};
-
-	class OSImGui : public OSImGui_Base, public Singleton<OSImGui>
+#ifdef _CONSOLE
+	class OSImGui : public OSImGui_External, public Singleton<OSImGui>
+#else
+	class OSImGui : public OSImGui_Internal, public Singleton<OSImGui>
+#endif
 	{
 	public:
 		// 文本

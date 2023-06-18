@@ -19,6 +19,7 @@ void DrawCallBack()
 
 	OSImGui::OSImGui::get().ShadowRectFilled({ 50,50 }, { 100,100 }, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 }, 10);
 	OSImGui::OSImGui::get().ShadowCircle({ 200,200 }, 30, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 });
+
 	//...
 }
 
