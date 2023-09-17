@@ -36,3 +36,5 @@
 /OS-ImGui/x64/Debug
 /OS-ImGui/imgui.ini
 /x64/Debug
+/OS-ImGui/Release
+/Release
