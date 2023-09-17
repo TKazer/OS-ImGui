@@ -11,14 +11,17 @@ void DrawCallBack()
 			//...
 		}
 		static bool a = false, b = false, c = false, d = false;
-		OSImGui::OSImGui::get().MyCheckBox("CheckBox1", &a);
-		OSImGui::OSImGui::get().MyCheckBox2("CheckBox2", &b);
-		OSImGui::OSImGui::get().MyCheckBox3("CheckBox3", &c);
-		OSImGui::OSImGui::get().MyCheckBox4("CheckBox4", &d);
+		static float Value = 0;
+		float min = 0, max = 100;
+		Gui.MyCheckBox("CheckBox1", &a);
+		Gui.MyCheckBox2("CheckBox2", &b);
+		Gui.MyCheckBox3("CheckBox3", &c);
+		Gui.MyCheckBox4("CheckBox4", &d);
+		Gui.SliderScalarEx1("[Slider]", ImGuiDataType_Float, &Value, &min, &max, "%.1f", ImGuiSliderFlags_None);
 	}ImGui::End();
 
-	OSImGui::OSImGui::get().ShadowRectFilled({ 50,50 }, { 100,100 }, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 }, 10);
-	OSImGui::OSImGui::get().ShadowCircle({ 200,200 }, 30, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 });
+	Gui.ShadowRectFilled({ 50,50 }, { 100,100 }, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 }, 10);
+	Gui.ShadowCircle({ 200,200 }, 30, ImColor(220, 190, 99, 255), ImColor(50, 50, 50, 255), 9, { 0,0 });
 
 	//...
 }
@@ -26,8 +29,8 @@ void DrawCallBack()
 int main()
 {
 	try {
-		OSImGui::OSImGui::get().NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
-		//OSImGui::OSImGui::get().AttachAnotherWindow("Title","", DrawCallBack);
+		Gui.NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
+		//Gui.AttachAnotherWindow("Title","", DrawCallBack);
 	}
 	catch (OSImGui::OSException& e)
 	{

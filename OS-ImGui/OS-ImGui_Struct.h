@@ -14,7 +14,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/3/2	11:32
+* @date			: 2023/9/17	11:30
 ****************************************************/
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -69,6 +69,14 @@ public:
 	{
 		return ImVec2(x, y);
 	}
+	float Length()
+	{
+		return sqrtf(powf(x, 2) + powf(y, 2));
+	}
+	float DistanceTo(const Vec2& Pos)
+	{
+		return sqrtf(powf(Pos.x - x, 2) + powf(Pos.y - y, 2));
+	}
 };
 
 class Vec3
@@ -113,6 +121,14 @@ public:
 	bool operator!=(Vec3 Vec3_)
 	{
 		return x != Vec3_.x || y != Vec3_.y || z != Vec3_.z;
+	}
+	float Length()
+	{
+		return sqrtf(powf(x, 2) + powf(y, 2) + powf(z, 2));
+	}
+	float DistanceTo(const Vec3& Pos)
+	{
+		return sqrtf(powf(Pos.x - x, 2) + powf(Pos.y - y, 2) + powf(Pos.z - z, 2));
 	}
 };
 

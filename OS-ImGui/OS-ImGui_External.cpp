@@ -12,6 +12,7 @@
 // D3D11 Device
 namespace OSImGui
 {
+#ifdef _CONSOLE
     bool D3DDevice::CreateDeviceD3D(HWND hWnd)
     {
         DXGI_SWAP_CHAIN_DESC sd;
@@ -55,6 +56,8 @@ namespace OSImGui
     {
         ID3D11Texture2D* pBackBuffer;
         g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+        if (pBackBuffer == nullptr)
+            return;
         g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
         pBackBuffer->Release();
     }
@@ -63,8 +66,10 @@ namespace OSImGui
     {
         if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
     }
+#endif
 }
 
+// OSImGui External
 namespace OSImGui
 {
 
@@ -191,7 +196,7 @@ namespace OSImGui
         }
         else
         {
-            Window.hWnd = CreateWindowW(Window.wClassName.c_str(), Window.wName.c_str(), WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU, Window.Pos.x, Window.Pos.y, Window.Size.x, Window.Size.y, NULL, NULL, wc.hInstance, NULL);
+            Window.hWnd = CreateWindowW(Window.wClassName.c_str(), Window.wName.c_str(), WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU, (int)Window.Pos.x, (int)Window.Pos.y, (int)Window.Size.x, (int)Window.Size.y, NULL, NULL, wc.hInstance, NULL);
         }
         Window.hInstance = wc.hInstance;
 
@@ -225,14 +230,14 @@ namespace OSImGui
         Window.Pos = DestWindow.Pos = Vec2(static_cast<float>(Point.x), static_cast<float>(Point.y));
         Window.Size = DestWindow.Size = Vec2(static_cast<float>(Rect.right), static_cast<float>(Rect.bottom));
 
-        SetWindowPos(Window.hWnd, HWND_TOPMOST, Window.Pos.x, Window.Pos.y, Window.Size.x, Window.Size.y, SWP_SHOWWINDOW);
+        SetWindowPos(Window.hWnd, HWND_TOPMOST, (int)Window.Pos.x, (int)Window.Pos.y, (int)Window.Size.x, (int)Window.Size.y, SWP_SHOWWINDOW);
 
         // ¿ØÖÆ´°¿Ú×´Ì¬ÇÐ»»
         POINT MousePos;
         GetCursorPos(&MousePos);
         ScreenToClient(Window.hWnd, &MousePos);
-        ImGui::GetIO().MousePos.x = MousePos.x;
-        ImGui::GetIO().MousePos.y = MousePos.y;
+        ImGui::GetIO().MousePos.x = static_cast<float>(MousePos.x);
+        ImGui::GetIO().MousePos.y = static_cast<float>(MousePos.y);
 
         if (ImGui::GetIO().WantCaptureMouse)
             SetWindowLong(Window.hWnd, GWL_EXSTYLE, GetWindowLong(Window.hWnd, GWL_EXSTYLE) & (~WS_EX_LAYERED));

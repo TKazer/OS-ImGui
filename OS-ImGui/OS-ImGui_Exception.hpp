@@ -1,4 +1,11 @@
 #pragma once
+
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+
+#if !_HAS_CXX17
+#error "The Os-ImGui are available only with C++17 or later."
+#endif
+
 #include <iostream>
 #include <exception>
 

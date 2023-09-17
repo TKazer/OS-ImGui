@@ -7,7 +7,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @date			: 2023/9/17	11:25
 ****************************************************/
 
 namespace OSImGui
@@ -25,7 +25,7 @@ namespace OSImGui
 		void StrokeText(std::string Text, Vec2 Pos, ImColor Color, float FontSize = 15, bool KeepCenter = false);
 		// 矩形
 		void Rectangle(Vec2 Pos, Vec2 Size, ImColor Color, float Thickness, float Rounding = 0);
-		void RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding = 0, float Nums = 15);
+		void RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding = 0, int Nums = 15);
 		// 线
 		void Line(Vec2 From, Vec2 To, ImColor Color, float Thickness);
 		// 圆形
@@ -43,7 +43,10 @@ namespace OSImGui
 		// 阴影矩形
 		void ShadowRectFilled(Vec2 Pos, Vec2 Size, ImColor RectColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Rounding = 0);
 		// 阴影圆形
-		void ShadowCircle(Vec2 Pos, float Radius, ImColor CircleColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Num = 30);
+		void ShadowCircle(Vec2 Pos, float Radius, ImColor CircleColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, int Num = 30);
+		// 圆头滑动条
+		bool SliderScalarEx1(const char* label, ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags);
 	};
 }
 
+inline OSImGui::OSImGui& Gui = OSImGui::OSImGui::get();

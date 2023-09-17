@@ -7,7 +7,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @date			: 2023/9/17	11:25
 ****************************************************/
 
 // OS-ImGui Draw 绘制功能
@@ -17,13 +17,13 @@ namespace OSImGui
     {
         if (!KeepCenter)
         {
-            ImGui::GetForegroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos.ToImVec2(), Color, Text.c_str());
+            ImGui::GetBackgroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos.ToImVec2(), Color, Text.c_str());
         }
         else
         {
             float TextWidth = ImGui::GetFont()->CalcTextSizeA(FontSize, FLT_MAX, 0.f, Text.c_str()).x;
             ImVec2 Pos_ = { Pos.x - TextWidth / 2,Pos.y };
-            ImGui::GetForegroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos_, Color, Text.c_str());
+            ImGui::GetBackgroundDrawList()->AddText(ImGui::GetFont(), FontSize, Pos_, Color, Text.c_str());
         }
     }
 
@@ -38,12 +38,12 @@ namespace OSImGui
 
     void OSImGui::Rectangle(Vec2 Pos, Vec2 Size, ImColor Color, float Thickness, float Rounding)
     {
-        ImGui::GetForegroundDrawList()->AddRect(Pos.ToImVec2(), (Pos + Size).ToImVec2(), Color, Rounding, 0, Thickness);
+        ImGui::GetBackgroundDrawList()->AddRect(Pos.ToImVec2(), (Pos + Size).ToImVec2(), Color, Rounding, 0, Thickness);
     }
 
-    void OSImGui::RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding, float Nums)
+    void OSImGui::RectangleFilled(Vec2 Pos, Vec2 Size, ImColor Color, float Rounding, int Nums)
     {
-        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
         ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All;
         ImVec2 a = Pos.ToImVec2();
         ImVec2 b = { Pos.x + Size.x,Pos.y + Size.y };
@@ -59,27 +59,27 @@ namespace OSImGui
         }
         else
         {
-            DrawList->PathArcTo(ImVec2(a.x + Rounding, a.y + Rounding), Rounding, IM_PI, IM_PI / 2 * 3, Nums);
-            DrawList->PathArcTo(ImVec2(b.x - Rounding, a.y + Rounding), Rounding, IM_PI / 2 * 3, IM_PI * 2, Nums);
-            DrawList->PathArcTo(ImVec2(b.x - Rounding, b.y - Rounding), Rounding, 0, IM_PI / 2, Nums);
-            DrawList->PathArcTo(ImVec2(a.x + Rounding, b.y - Rounding), Rounding, IM_PI / 2, IM_PI, Nums);
+            DrawList->PathArcTo(ImVec2(a.x + Rounding, a.y + Rounding), Rounding, IM_PI, IM_PI / 2.f * 3.f, Nums);
+            DrawList->PathArcTo(ImVec2(b.x - Rounding, a.y + Rounding), Rounding, IM_PI / 2.f * 3.f, IM_PI * 2.f, Nums);
+            DrawList->PathArcTo(ImVec2(b.x - Rounding, b.y - Rounding), Rounding, 0.f, IM_PI / 2.f, Nums);
+            DrawList->PathArcTo(ImVec2(a.x + Rounding, b.y - Rounding), Rounding, IM_PI / 2.f, IM_PI, Nums);
         }
         DrawList->PathFillConvex(Color);
     }
 
     void OSImGui::Line(Vec2 From, Vec2 To, ImColor Color, float Thickness)
     {
-        ImGui::GetForegroundDrawList()->AddLine(From.ToImVec2(), To.ToImVec2(), Color, Thickness);
+        ImGui::GetBackgroundDrawList()->AddLine(From.ToImVec2(), To.ToImVec2(), Color, Thickness);
     }
 
     void OSImGui::Circle(Vec2 Center, float Radius, ImColor Color, float Thickness, int Num)
     {
-        ImGui::GetForegroundDrawList()->AddCircle(Center.ToImVec2(), Radius, Color, Num, Thickness);
+        ImGui::GetBackgroundDrawList()->AddCircle(Center.ToImVec2(), Radius, Color, Num, Thickness);
     }
 
     void OSImGui::CircleFilled(Vec2 Center, float Radius, ImColor Color, int Num)
     {
-        ImGui::GetForegroundDrawList()->AddCircleFilled(Center.ToImVec2(), Radius, Color, Num);
+        ImGui::GetBackgroundDrawList()->AddCircleFilled(Center.ToImVec2(), Radius, Color, Num);
     }
 
     void OSImGui::ConnectPoints(std::vector<Vec2> Points, ImColor Color, float Thickness)
@@ -96,7 +96,7 @@ namespace OSImGui
 
     void OSImGui::Arc(ImVec2 Center, float Radius, ImColor Color, float Thickness, float Angle_begin, float Angle_end, float Nums)
     {
-        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
         float angle = (Angle_end - Angle_begin) / Nums;
         for (int i = 0; i < Nums; i++)
         {
@@ -111,7 +111,7 @@ namespace OSImGui
         ImVec2 p = ImGui::GetCursorScreenPos();
         ImDrawList* DrawList = ImGui::GetWindowDrawList();
         float Height = ImGui::GetFrameHeight();
-        float Width = Height * 1.7;
+        float Width = Height * 1.7f;
         float Radius = Height / 2 - 2;
 
         ImGui::InvisibleButton(str_id, ImVec2(Width, Height));
@@ -129,9 +129,9 @@ namespace OSImGui
         // 鼠标悬停颜色
         ImU32 Color;
         if (ImGui::IsItemHovered())
-            Color = ImGui::GetColorU32(ImLerp(ImVec4(0.85f, 0.24f, 0.15f, 1.0f), ImVec4(0.55f, 0.85f, 0.13, 1.000f), t));
+            Color = ImGui::GetColorU32(ImLerp(ImVec4(0.85f, 0.24f, 0.15f, 1.0f), ImVec4(0.55f, 0.85f, 0.13f, 1.000f), t));
         else
-            Color = ImGui::GetColorU32(ImLerp(ImVec4(0.90f, 0.29f, 0.20f, 1.0f), ImVec4(0.60f, 0.90f, 0.18, 1.000f), t));
+            Color = ImGui::GetColorU32(ImLerp(ImVec4(0.90f, 0.29f, 0.20f, 1.0f), ImVec4(0.60f, 0.90f, 0.18f, 1.000f), t));
         // 组件绘制
         DrawList->AddRectFilled(ImVec2(p.x, p.y), ImVec2(p.x + Width, p.y + Height), Color, Height);
         DrawList->AddCircleFilled(ImVec2(p.x + Radius + t * (Width - Radius * 2) + (t == 0 ? 2 : -2), p.y + Radius + 2), Radius, IM_COL32(255, 255, 255, 255), 360);
@@ -146,7 +146,7 @@ namespace OSImGui
         ImVec2 p = ImGui::GetCursorScreenPos();
         ImDrawList* DrawList = ImGui::GetWindowDrawList();
         float Height = ImGui::GetFrameHeight();
-        float Width = Height * 1.7;
+        float Width = Height * 1.7f;
         float Radius = Height / 2 - 2;
 
         ImGui::InvisibleButton(str_id, ImVec2(Width, Height));
@@ -185,7 +185,7 @@ namespace OSImGui
         float Height = ImGui::GetFrameHeight();
         float Width = Height;
         float Left = 8;
-        float Right = Left * 1.5;
+        float Right = Left * 1.5f;
         ImGui::InvisibleButton(str_id, ImVec2(Width, Height));
 
         if (ImGui::IsItemClicked())
@@ -261,17 +261,113 @@ namespace OSImGui
 
     void OSImGui::ShadowRectFilled(Vec2 Pos, Vec2 Size, ImColor RectColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Rounding)
     {
-        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
         ImDrawFlags Flags = (Rounding > 0.f) ? ImDrawFlags_RoundCornersMask_ : ImDrawFlags_None;
         DrawList->AddShadowRect(Pos.ToImVec2(), { Pos.x + Size.x,Pos.y + Size.y }, ShadowColor, ShadowThickness, ShadowOffset.ToImVec2(), Flags, Rounding);
         DrawList->AddRectFilled(Pos.ToImVec2(), { Pos.x + Size.x,Pos.y + Size.y }, RectColor, Rounding);
     }
 
-    void OSImGui::ShadowCircle(Vec2 Pos, float Radius, ImColor CircleColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, float Num)
+    void OSImGui::ShadowCircle(Vec2 Pos, float Radius, ImColor CircleColor, ImColor ShadowColor, float ShadowThickness, Vec2 ShadowOffset, int Num)
     {
-        ImDrawList* DrawList = ImGui::GetForegroundDrawList();
+        ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
         DrawList->AddShadowCircle(Pos.ToImVec2(), Radius, ShadowColor, ShadowThickness, ShadowOffset.ToImVec2(), ImDrawFlags_None, Num);
         DrawList->AddCircleFilled(Pos.ToImVec2(), Radius, CircleColor, Num);
     }
+
+    bool OSImGui::SliderScalarEx1(const char* label, ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+    {
+        ImGuiWindow* window = ImGui::GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const float w = ImGui::CalcItemWidth();
+
+        const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+        const ImRect frame_bb(window->DC.CursorPos, (Vec2(window->DC.CursorPos) + Vec2(w, label_size.y + style.FramePadding.y * 2.0f)).ToImVec2());
+        const ImRect total_bb(frame_bb.Min, (Vec2(frame_bb.Max) + Vec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f)).ToImVec2());
+
+        const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
+        ImGui::ItemSize(total_bb, style.FramePadding.y);
+        if (!ImGui::ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))
+            return false;
+
+        // Default format string when passing NULL
+        if (format == NULL)
+            format = ImGui::DataTypeGetInfo(data_type)->PrintFmt;
+
+        const bool hovered = ImGui::ItemHoverable(frame_bb, id);
+        bool temp_input_is_active = temp_input_allowed && ImGui::TempInputIsActive(id);
+        if (!temp_input_is_active)
+        {
+            // Tabbing or CTRL-clicking on Slider turns it into an input box
+            const bool input_requested_by_tabbing = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+            const bool clicked = hovered && ImGui::IsMouseClicked(0, id);
+            const bool make_active = (input_requested_by_tabbing || clicked || g.NavActivateId == id);
+            if (make_active && clicked)
+                ImGui::SetKeyOwner(ImGuiKey_MouseLeft, id);
+            if (make_active && temp_input_allowed)
+                if (input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || (g.NavActivateId == id && (g.NavActivateFlags & ImGuiActivateFlags_PreferInput)))
+                    temp_input_is_active = true;
+
+            if (make_active && !temp_input_is_active)
+            {
+                ImGui::SetActiveID(id, window);
+                ImGui::SetFocusID(id, window);
+                ImGui::FocusWindow(window);
+                g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
+            }
+        }
+
+        if (temp_input_is_active)
+        {
+            // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
+            const bool is_clamp_input = (flags & ImGuiSliderFlags_AlwaysClamp) != 0;
+            return ImGui::TempInputScalar(frame_bb, id, label, data_type, p_data, format, is_clamp_input ? p_min : NULL, is_clamp_input ? p_max : NULL);
+        }
+
+        float grab_radius = 8;
+
+        // Draw frame
+        ImRect frame_sc = frame_bb;
+        float frame_height_origin = frame_sc.GetHeight();
+        frame_sc.Min.y += frame_height_origin / 3;
+        frame_sc.Max.y -= frame_height_origin / 3;
+        const ImU32 frame_col = ImGui::GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+        ImGui::RenderNavHighlight(frame_bb, id);
+        window->DrawList->AddRectFilled(frame_sc.Min, frame_sc.Max, frame_col, grab_radius);
+
+        // Slider behavior
+        ImRect grab_bb;
+        const bool value_changed = ImGui::SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags, &grab_bb);
+        if (value_changed)
+            ImGui::MarkItemEdited(id);
+
+        // Render grab
+        if (grab_bb.Max.x > grab_bb.Min.x)
+        {
+            window->DrawList->AddShadowCircle(grab_bb.GetCenter(), grab_radius, ImColor(30, 30, 30, 255), 9, { 0,0 });
+            window->DrawList->AddCircleFilled(grab_bb.GetCenter(), grab_radius, ImColor(220, 220, 220, 255));
+        }
+
+        // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
+        char value_buf[64];
+        const char* value_buf_end = value_buf + ImGui::DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
+        if (g.LogEnabled)
+            ImGui::LogSetNextTextDecoration("{", "}");
+        ImGui::RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+
+
+        // label
+        if (label_size.x > 0.0f)
+            ImGui::RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
+
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | (temp_input_allowed ? ImGuiItemStatusFlags_Inputable : 0));
+        return value_changed;
+    }
+
 }
 

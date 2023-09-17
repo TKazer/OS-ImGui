@@ -15,7 +15,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @date			: 2023/9/17	11:22
 ****************************************************/
 
 namespace OSImGui
@@ -47,7 +47,7 @@ namespace OSImGui
 	{
 	public:
 		HWND  hWnd = NULL;
-		HINSTANCE hInstance;
+		HINSTANCE hInstance = nullptr;
 		std::string Name;
 		std::wstring wName;
 		std::string ClassName;
