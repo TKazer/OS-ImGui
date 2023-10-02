@@ -14,7 +14,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/9/17	11:30
+* @date			: 2023/10/2	17:28
 ****************************************************/
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -33,28 +33,40 @@ public:
 		y = ImVec2_.y;
 		return *this;
 	}
-	Vec2& operator+(Vec2 Vec2_)
+	Vec2 operator+(Vec2 Vec2_)
 	{
 		x += Vec2_.x;
 		y += Vec2_.y;
 		return *this;
 	}
-	Vec2& operator-(Vec2 Vec2_)
+	Vec2 operator-(Vec2 Vec2_)
 	{
 		x -= Vec2_.x;
 		y -= Vec2_.y;
 		return *this;
 	}
-	Vec2& operator*(Vec2 Vec2_)
+	Vec2 operator*(Vec2 Vec2_)
 	{
 		x *= Vec2_.x;
 		y *= Vec2_.y;
 		return *this;
 	}
-	Vec2& operator/(Vec2 Vec2_)
+	Vec2 operator/(Vec2 Vec2_)
 	{
 		x /= Vec2_.x;
 		y /= Vec2_.y;
+		return *this;
+	}
+	Vec2 operator*(float n)
+	{
+		x *= n;
+		y *= n;
+		return *this;
+	}
+	Vec2 operator/(float n)
+	{
+		x /= n;
+		y /= n;
 		return *this;
 	}
 	bool operator==(Vec2 Vec2_)
@@ -86,32 +98,46 @@ public:
 public:
 	Vec3() :x(0.f), y(0.f), z(0.f) {}
 	Vec3(float x_, float y_, float z_) :x(x_), y(y_), z(z_) {}
-	Vec3& operator+(Vec3 Vec3_)
+	Vec3 operator+(Vec3 Vec3_)
 	{
 		x += Vec3_.x;
 		y += Vec3_.y;
 		z += Vec3_.z;
 		return *this;
 	}
-	Vec3& operator-(Vec3 Vec3_)
+	Vec3 operator-(Vec3 Vec3_)
 	{
 		x -= Vec3_.x;
 		y -= Vec3_.y;
 		z -= Vec3_.z;
 		return *this;
 	}
-	Vec3& operator*(Vec3 Vec3_)
+	Vec3 operator*(Vec3 Vec3_)
 	{
 		x *= Vec3_.x;
 		y *= Vec3_.y;
 		z *= Vec3_.z;
 		return *this;
 	}
-	Vec3& operator/(Vec3 Vec3_)
+	Vec3 operator/(Vec3 Vec3_)
 	{
 		x /= Vec3_.x;
 		y /= Vec3_.y;
 		z /= Vec3_.z;
+		return *this;
+	}
+	Vec3 operator*(float n)
+	{
+		x *= n;
+		y *= n;
+		z *= n;
+		return *this;
+	}
+	Vec3 operator/(float n)
+	{
+		x /= n;
+		y /= n;
+		z /= n;
 		return *this;
 	}
 	bool operator==(Vec3 Vec3_)

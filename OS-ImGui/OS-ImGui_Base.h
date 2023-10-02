@@ -15,7 +15,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.0
-* @date			: 2023/9/17	11:22
+* @date			: 2023/10/2 17:28
 ****************************************************/
 
 namespace OSImGui
@@ -64,7 +64,7 @@ namespace OSImGui
 		std::function<void()> CallBackFn = nullptr;
 		// 退出标识
 		bool EndFlag = false;
-	protected:
+	public:
 		// 窗口数据
 		WindowData Window;
 		// 目标窗口数据
