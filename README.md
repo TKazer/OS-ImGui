@@ -1,6 +1,9 @@
 # OS-ImGui
 A simple imgui library, develop based on [Dear-ImGui](https://github.com/ocornut/imgui).
+
 Aim to make it easy for people to use imgui, which only takes few minutes.
+
+Chinese -> [README-ZH](https://github.com/TKazer/OS-ImGui/blob/master/README-ZH.md)
 
 ## Feature
 * Compatible for internal and external use, and easy to switch.
