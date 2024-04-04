@@ -6,8 +6,9 @@ void DrawCallBack()
 	ImGui::Begin("Menu");
 	{
 		ImGui::Text("This is a text.");
-		if (ImGui::Button("Button"))
+		if (ImGui::Button("Quit"))
 		{
+			Gui.Quit();
 			//...
 		}
 		static bool a = false, b = false, c = false, d = false;
@@ -26,6 +27,31 @@ void DrawCallBack()
 	//...
 }
 
+/*
+	NOTICE:
+		If need change to internal mode, please define "OSIMGUI_INTERNAL" in Preprocessing, and change the project to DLL.
+		Only surport for DirectX11 now.
+	提示：
+		如果需要使用internal版本，请在预处理器中定义 "OSIMGUI_INTERNAL"，并且将项目切换为DLL项目。
+		目前只支持DirectX11。
+*/
+
+#ifdef OSIMGUI_INTERNAL
+
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+{
+	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
+	{
+		// Entry
+		Gui.Start(hModule, DrawCallBack);
+	}
+	return TRUE;
+}
+
+#endif
+
+#ifndef OSIMGUI_INTERNAL
+
 int main()
 {
 	try {
@@ -40,3 +66,5 @@ int main()
 	system("pause");
 	return 0;
 }
+
+#endif

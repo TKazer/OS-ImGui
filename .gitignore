@@ -38,3 +38,5 @@
 /x64/Debug
 /OS-ImGui/Release
 /Release
+/OS-ImGui/x64/Release
+/x64/Release

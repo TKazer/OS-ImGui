@@ -5,8 +5,8 @@
 * @file			: OS-ImGui_Base.cpp
 * @author		: Liv
 * @email		: 1319923129@qq.com
-* @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @version		: 1.1
+* @date			: 2024/4/4 13:59
 ****************************************************/
 
 namespace OSImGui
@@ -33,9 +33,15 @@ namespace OSImGui
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
 
-        g_Device.CleanupDeviceD3D();
-        DestroyWindow(Window.hWnd);
-        UnregisterClassA(Window.ClassName.c_str(), Window.hInstance);
+        if(g_Device.g_pd3dDevice)
+            g_Device.CleanupDeviceD3D();
+
+        // Only destroy window in external mode.
+        if (Window.hWnd && !Window.Name.empty())
+        {
+            DestroyWindow(Window.hWnd);
+            UnregisterClassA(Window.ClassName.c_str(), Window.hInstance);
+        }
     }
 
     std::wstring OSImGui_Base::StringToWstring(std::string& str)

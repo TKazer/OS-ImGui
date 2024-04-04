@@ -1,21 +1,22 @@
 #pragma once
 #include "OS-ImGui_External.h"
+#include "OS-ImGui_Internal.h"
 
 /****************************************************
 * Copyright (C)	: Liv
 * @file			: OS-ImGui.h
 * @author		: Liv
 * @email		: 1319923129@qq.com
-* @version		: 1.0
-* @date			: 2023/9/17	11:25
+* @version		: 1.1
+* @date			: 2024/4/4 13:59
 ****************************************************/
 
 namespace OSImGui
 {
-#ifdef _CONSOLE
-	class OSImGui : public OSImGui_External, public Singleton<OSImGui>
-#else
+#ifdef OSIMGUI_INTERNAL
 	class OSImGui : public OSImGui_Internal, public Singleton<OSImGui>
+#else
+	class OSImGui : public OSImGui_External, public Singleton<OSImGui>
 #endif
 	{
 	public:

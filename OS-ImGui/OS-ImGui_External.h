@@ -6,12 +6,14 @@
 * @file			: OS-ImGui_External.h
 * @author		: Liv
 * @email		: 1319923129@qq.com
-* @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @version		: 1.1
+* @date			: 2024/4/4 14:12
 ****************************************************/
 
 namespace OSImGui
 {
+#ifndef OSIMGUI_INTERNAL
+
 	class OSImGui_External : public OSImGui_Base
 	{
 	private:
@@ -28,4 +30,6 @@ namespace OSImGui
 		bool CreateMyWindow();
 		bool PeekEndMessage();
 	};
+
+#endif
 }

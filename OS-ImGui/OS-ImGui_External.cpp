@@ -5,14 +5,13 @@
 * @file			: OS-ImGui_External.cpp
 * @author		: Liv
 * @email		: 1319923129@qq.com
-* @version		: 1.0
-* @date			: 2023/6/18	11:21
+* @version		: 1.1
+* @date			: 2024/4/4 14:12
 ****************************************************/
 
 // D3D11 Device
 namespace OSImGui
 {
-#ifdef _CONSOLE
     bool D3DDevice::CreateDeviceD3D(HWND hWnd)
     {
         DXGI_SWAP_CHAIN_DESC sd;
@@ -35,7 +34,7 @@ namespace OSImGui
         D3D_FEATURE_LEVEL featureLevel;
         const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
         HRESULT res = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
-        if (res == DXGI_ERROR_UNSUPPORTED) // Try high-performance WARP software driver if hardware is not available.
+        if (res == DXGI_ERROR_UNSUPPORTED)
             res = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_WARP, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
         if (res != S_OK)
             return false;
@@ -66,12 +65,12 @@ namespace OSImGui
     {
         if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
     }
-#endif
 }
 
 // OSImGui External
 namespace OSImGui
 {
+#ifndef OSIMGUI_INTERNAL
 
     LRESULT WINAPI WndProc_External(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -278,4 +277,5 @@ namespace OSImGui
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
+#endif
 }
