@@ -26,7 +26,7 @@ void DrawCallBack()
 		ImGui::Text("This is a text.");
 		if (ImGui::Button("Quit"))
 		{
-			// Using Gui.Quit() to quit the exe or dll.
+			// 使用Gui.Quit()退出程序或者卸载DLL。
 			Gui.Quit();
 			//...
 		}
