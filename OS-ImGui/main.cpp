@@ -6,7 +6,7 @@ void DrawCallBack()
 	ImGui::Begin("Menu");
 	{
 		ImGui::Text("This is a text.");
-		if (ImGui::Button("Quit") || GetAsyncKeyState(VK_END))
+		if (ImGui::Button("Quit"))
 		{
 			Gui.Quit();
 			//...

@@ -39,10 +39,6 @@ namespace OSImGui
 		bool InitDx9(LPDIRECT3DDEVICE9 pDevice);
 		void CleanDx9();
 		bool InitDx9Hook();
-		// DirectX 12
-		bool InitDx12(IDXGISwapChain3* pSwapChain);
-		void CleanDx12();
-		bool InitDx12Hook();
 	private:
 		void InitThread();
 		bool CreateMyWindow();
