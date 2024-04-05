@@ -18,6 +18,22 @@ English -> [README-EN](https://github.com/TKazer/OS-ImGui/blob/master/README.md)
 
 ## 示例
 
+~~~ c++
+void DrawCallBack()
+{
+	ImGui::Begin("Menu");
+	{
+		ImGui::Text("This is a text.");
+		if (ImGui::Button("Quit"))
+		{
+			// Using Gui.Quit() to quit the exe or dll.
+			Gui.Quit();
+			//...
+		}
+	}ImGui::End();
+}
+~~~
+
 1. 外部模式
 ~~~ c++
 int main()
