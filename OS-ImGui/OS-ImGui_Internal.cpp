@@ -18,6 +18,10 @@ typedef HRESULT(__stdcall* Present) (IDXGISwapChain* pSwapChain, UINT SyncInterv
 typedef HRESULT(__stdcall* Resize)(IDXGISwapChain* pSwapChain, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags);
 typedef HRESULT(__stdcall* EndScene)(LPDIRECT3DDEVICE9);
 typedef HRESULT(__stdcall* Reset)(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*);
+typedef HRESULT(__stdcall* Present_Dx12) (IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT Flags);
+typedef void(__stdcall* ExecuteCommandLists)(ID3D12CommandQueue* pCommandQueue, UINT NumCommandLists, ID3D12CommandList* ppCommandLists);
+typedef HRESULT(__stdcall* ResizeBuffers)(IDXGISwapChain* pSwapChain, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags);
+typedef HRESULT(__stdcall* ResizeTarget)(IDXGISwapChain* pSwapChain, const DXGI_MODE_DESC* pNewTargetParameters);
 
 // DirectX 9
 inline EndScene oEndScene;
@@ -25,9 +29,14 @@ inline Reset oReSet;
 // DirectX 11
 inline Present oPresent;
 inline Resize oResize;
+// DirectX 12
+inline Present_Dx12 oPresent_Dx12;
+inline ExecuteCommandLists oExecuteCommandLists;
+inline ResizeBuffers oResizeBuffers;
+inline ResizeTarget oResizeTarget;
 
 inline WNDPROC oWndProc = NULL;
-inline bool IsDx11Init = false, IsDx9Init = false;
+inline bool IsDx11Init = false, IsDx9Init = false, IsDx12Init = false;
 
 namespace OSImGui
 {
@@ -86,7 +95,9 @@ namespace OSImGui
 	{
 		if (this->DxType == DirectXType::AUTO)
 		{
-			if (GetModuleHandleA("d3d11.dll"))
+			if(GetModuleHandleA("d3d12.dll"))
+				this->DxType = DirectXType::DX12;
+			else if (GetModuleHandleA("d3d11.dll"))
 				this->DxType = DirectXType::DX11;
 			else if (GetModuleHandleA("d3d9.dll"))
 				this->DxType = DirectXType::DX9;
@@ -96,7 +107,14 @@ namespace OSImGui
 
 		do
 		{
-			if (this->DxType == DirectXType::DX11)
+			if (this->DxType == DirectXType::DX12)
+			{
+				if (this->InitDx12Hook())
+				{
+					break;
+				}
+			}
+			else if (this->DxType == DirectXType::DX11)
 			{
 				if (this->InitDx11Hook())
 				{
@@ -139,6 +157,8 @@ namespace OSImGui
 
 		return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 	}
+
+	//========================== Dx11 ==========================
 
 	HRESULT __stdcall hkResize(IDXGISwapChain* pSwapChain, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags)
 	{
@@ -356,6 +376,8 @@ namespace OSImGui
 		return false;
 	}
 
+	//========================== Dx9 ==========================
+
 	HRESULT __stdcall hkEndScene(LPDIRECT3DDEVICE9 pDevice)
 	{
 		if (!IsDx9Init)
@@ -526,6 +548,356 @@ namespace OSImGui
 			}
 			return false;
 		}
+
+		if (MH_EnableHook(MH_ALL_HOOKS) == MH_OK)
+			return true;
+
+		return false;
+	}
+
+	//========================== Dx12 ==========================
+
+	bool OSImGui_Internal::InitDx12(IDXGISwapChain3* pSwapChain)
+	{
+		if (SUCCEEDED(pSwapChain->GetDevice(__uuidof(ID3D12Device), (void**)&g_Device.D3D12.pDevice)))
+		{
+			DXGI_SWAP_CHAIN_DESC Desc;
+			pSwapChain->GetDesc(&Desc);
+			Desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+			Desc.OutputWindow = OSImGui::get().Window.hWnd;
+			Desc.Windowed = ((GetWindowLongPtrA(OSImGui::get().Window.hWnd, GWL_STYLE) & WS_POPUP) != 0) ? false : true;
+
+			g_Device.D3D12.BufferCounts = Desc.BufferCount;
+			g_Device.D3D12.FrameContext = new D3DDevice::D3D12_::FrameContext_[g_Device.D3D12.BufferCounts];
+
+			D3D12_DESCRIPTOR_HEAP_DESC DescriptorImGuiRender = {};
+			DescriptorImGuiRender.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			DescriptorImGuiRender.NumDescriptors = g_Device.D3D12.BufferCounts;
+			DescriptorImGuiRender.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+			if (g_Device.D3D12.pDevice->CreateDescriptorHeap(&DescriptorImGuiRender, IID_PPV_ARGS(&g_Device.D3D12.pDescriptorHeapImGuiRender)) != S_OK)
+				return false;
+
+			ID3D12CommandAllocator* Allocator;
+			if (g_Device.D3D12.pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Allocator)) != S_OK)
+				return false;
+
+			for (size_t i = 0; i < g_Device.D3D12.BufferCounts; i++) 
+			{
+				g_Device.D3D12.FrameContext[i].pCommandAllocator = Allocator;
+			}
+
+			if (g_Device.D3D12.pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocator, NULL, IID_PPV_ARGS(&g_Device.D3D12.pCommandList)) != S_OK 
+				|| g_Device.D3D12.pCommandList->Close() != S_OK)
+				return false;
+
+			D3D12_DESCRIPTOR_HEAP_DESC DescriptorBackBuffers;
+			DescriptorBackBuffers.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+			DescriptorBackBuffers.NumDescriptors = g_Device.D3D12.BufferCounts;
+			DescriptorBackBuffers.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			DescriptorBackBuffers.NodeMask = 1;
+
+			if (g_Device.D3D12.pDevice->CreateDescriptorHeap(&DescriptorBackBuffers, IID_PPV_ARGS(&g_Device.D3D12.pDescriptorHeapBackBuffers)) != S_OK)
+				return false;
+
+			auto RTVDescriptorSize = g_Device.D3D12.pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			D3D12_CPU_DESCRIPTOR_HANDLE RTVHandle = g_Device.D3D12.pDescriptorHeapBackBuffers->GetCPUDescriptorHandleForHeapStart();
+
+			for (size_t i = 0; i < g_Device.D3D12.BufferCounts; i++) {
+				ID3D12Resource* pBackBuffer = nullptr;
+				g_Device.D3D12.FrameContext[i].DescriptorHandle = RTVHandle;
+				pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
+				g_Device.D3D12.pDevice->CreateRenderTargetView(pBackBuffer, nullptr, RTVHandle);
+				g_Device.D3D12.FrameContext[i].pResource = pBackBuffer;
+				RTVHandle.ptr += RTVDescriptorSize;
+			}
+
+			if (GetProcessWindow() == NULL)
+				return false;
+
+			ImGui::CreateContext();
+
+			ImGui::StyleColorsDark();
+			ImGui::GetIO().LogFilename = nullptr;
+
+			ImGui_ImplWin32_Init(this->Window.hWnd);
+			ImGui_ImplDX12_Init(g_Device.D3D12.pDevice, g_Device.D3D12.BufferCounts, DXGI_FORMAT_R8G8B8A8_UNORM,
+						      g_Device.D3D12.pDescriptorHeapImGuiRender,
+				g_Device.D3D12.pDescriptorHeapImGuiRender->GetCPUDescriptorHandleForHeapStart(),
+				g_Device.D3D12.pDescriptorHeapImGuiRender->GetGPUDescriptorHandleForHeapStart());
+			ImGui_ImplDX12_CreateDeviceObjects();
+
+			ImGui::GetIO().ImeWindowHandle = this->Window.hWnd;
+
+			oWndProc = (WNDPROC)SetWindowLongPtrA(OSImGui::get().Window.hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	void OSImGui_Internal::CleanDx12()
+	{
+		if (g_Device.D3D12.pDevice)
+			g_Device.D3D12.pDevice->Release();
+		if (g_Device.D3D12.pCommandList)
+			g_Device.D3D12.pCommandList->Release();
+		if (g_Device.D3D12.pDescriptorHeapBackBuffers)
+			g_Device.D3D12.pDescriptorHeapBackBuffers->Release();
+		if (g_Device.D3D12.pDescriptorHeapImGuiRender)
+			g_Device.D3D12.pDescriptorHeapImGuiRender->Release();
+		if (g_Device.D3D12.FrameContext)
+			delete[] g_Device.D3D12.FrameContext;
+	}
+	
+	void __stdcall hkExecuteCommandLists(ID3D12CommandQueue* pCommandQueue, UINT NumCommandLists, ID3D12CommandList* ppCommandLists)
+	{
+		if (g_Device.D3D12.pCommandQueue == nullptr)
+			g_Device.D3D12.pCommandQueue = pCommandQueue;
+
+		oExecuteCommandLists(pCommandQueue, NumCommandLists, ppCommandLists);
+	}
+
+	HRESULT __stdcall hkResizeBuffers(IDXGISwapChain* pSwapChain, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags)
+	{
+		if (IsDx12Init)
+		{
+			IsDx12Init = false;
+
+			ImGui_ImplDX12_Shutdown();
+			ImGui_ImplWin32_Shutdown();
+			ImGui::DestroyContext();
+			OSImGui::get().CleanDx12();
+		}
+		
+		return oResizeBuffers(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags);
+	}
+
+	HRESULT __stdcall hkResizeTarget(IDXGISwapChain* pSwapChain, const DXGI_MODE_DESC* pNewTargetParameters)
+	{
+		if (IsDx12Init)
+		{
+			ImGui_ImplDX12_Shutdown();
+			oWndProc = (WNDPROC)SetWindowLongPtrA(OSImGui::get().Window.hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
+			ImGui_ImplWin32_Shutdown();
+			ImGui::DestroyContext();
+			OSImGui::get().CleanDx12();
+			IsDx12Init = false;
+		}
+		return oResizeTarget(pSwapChain, pNewTargetParameters);
+	}
+
+	HRESULT __stdcall hkPresent_Dx12(IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT Flags)
+	{
+		if (!IsDx12Init)
+		{
+			if(OSImGui::get().InitDx12(pSwapChain))
+				IsDx12Init = true;
+			else
+				return oPresent_Dx12(pSwapChain, SyncInterval, Flags);
+		}
+
+		if (g_Device.D3D12.pCommandQueue == nullptr)
+			return oPresent_Dx12(pSwapChain, SyncInterval, Flags);
+
+		ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+
+		OSImGui::get().CallBackFn();
+
+		ImGui::EndFrame();
+
+		D3DDevice::D3D12_::FrameContext_& CurrentFrameContext = g_Device.D3D12.FrameContext[pSwapChain->GetCurrentBackBufferIndex()];
+		CurrentFrameContext.pCommandAllocator->Reset();
+
+		D3D12_RESOURCE_BARRIER Barrier;
+		Barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		Barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		Barrier.Transition.pResource = CurrentFrameContext.pResource;
+		Barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		Barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		Barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		g_Device.D3D12.pCommandList->Reset(CurrentFrameContext.pCommandAllocator, nullptr);
+		g_Device.D3D12.pCommandList->ResourceBarrier(1, &Barrier);
+		g_Device.D3D12.pCommandList->OMSetRenderTargets(1, &CurrentFrameContext.DescriptorHandle, FALSE, nullptr);
+		g_Device.D3D12.pCommandList->SetDescriptorHeaps(1, &g_Device.D3D12.pDescriptorHeapImGuiRender);
+
+		ImGui::Render();
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_Device.D3D12.pCommandList);
+		
+		Barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		Barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		g_Device.D3D12.pCommandList->ResourceBarrier(1, &Barrier);
+		g_Device.D3D12.pCommandList->Close();
+		g_Device.D3D12.pCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList* const*>(&g_Device.D3D12.pCommandList));
+
+		if (OSImGui::get().EndFlag)
+		{
+			oPresent_Dx12(pSwapChain, SyncInterval, Flags);
+
+			OSImGui::get().ReleaseHook();
+			OSImGui::get().CleanDx12();
+
+			oWndProc = (WNDPROC)SetWindowLongPtrA(OSImGui::get().Window.hWnd, GWLP_WNDPROC, (LONG_PTR)(oWndProc));
+
+			OSImGui::get().FreeDLL = true;
+
+			return NULL;
+		}
+
+		return oPresent_Dx12(pSwapChain, SyncInterval, Flags);
+	}
+
+	bool OSImGui_Internal::InitDx12Hook()
+	{
+		if (!this->CreateMyWindow())
+			return false;
+
+		HMODULE hD3D12Module = NULL;
+		HMODULE hDXGIModule = NULL;
+
+		hD3D12Module = GetModuleHandleA("d3d12.dll");
+		hDXGIModule = GetModuleHandleA("dxgi.dll");
+
+		if (hD3D12Module == NULL || hDXGIModule == NULL) 
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		void* CreateDXGIFactory = GetProcAddress(hDXGIModule, "CreateDXGIFactory");
+		if (CreateDXGIFactory == NULL) 
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		IDXGIFactory* Factory;
+		if (((long(__stdcall*)(const IID&, void**))(CreateDXGIFactory))(__uuidof(IDXGIFactory), (void**)&Factory) < 0) 
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		IDXGIAdapter* Adapter;
+		if (Factory->EnumAdapters(0, &Adapter) == DXGI_ERROR_NOT_FOUND) 
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		void* D3D12CreateDevice = GetProcAddress(hD3D12Module, "D3D12CreateDevice");
+		if (D3D12CreateDevice == NULL) 
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		ID3D12Device* pDevice;
+		if (((long(__stdcall*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**))(D3D12CreateDevice))(Adapter, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)&pDevice) < 0)
+		{
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		D3D12_COMMAND_QUEUE_DESC QueueDesc;
+		QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+		QueueDesc.Priority = 0;
+		QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		QueueDesc.NodeMask = 0;
+
+		ID3D12CommandQueue* CommandQueue;
+		if (pDevice->CreateCommandQueue(&QueueDesc, __uuidof(ID3D12CommandQueue), (void**)&CommandQueue) < 0) {
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		ID3D12CommandAllocator* CommandAllocator;
+		if (pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)&CommandAllocator) < 0) {
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		ID3D12GraphicsCommandList* CommandList;
+		if (pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, CommandAllocator, NULL, __uuidof(ID3D12GraphicsCommandList), (void**)&CommandList) < 0) {
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		DXGI_RATIONAL RefreshRate;
+		RefreshRate.Numerator = 60;
+		RefreshRate.Denominator = 1;
+
+		DXGI_MODE_DESC BufferDesc;
+		BufferDesc.Width = 100;
+		BufferDesc.Height = 100;
+		BufferDesc.RefreshRate = RefreshRate;
+		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+
+		DXGI_SAMPLE_DESC SampleDesc;
+		SampleDesc.Count = 1;
+		SampleDesc.Quality = 0;
+
+		DXGI_SWAP_CHAIN_DESC SwapChainDesc = {};
+		SwapChainDesc.BufferDesc = BufferDesc;
+		SwapChainDesc.SampleDesc = SampleDesc;
+		SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		SwapChainDesc.BufferCount = 2;
+		SwapChainDesc.OutputWindow = this->Window.hWnd;
+		SwapChainDesc.Windowed = 1;
+		SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		SwapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+		IDXGISwapChain* SwapChain;
+		if (Factory->CreateSwapChain(CommandQueue, &SwapChainDesc, &SwapChain) < 0) {
+			this->DestroyMyWindow();
+			return false;
+		}
+
+		Address* Vtable = reinterpret_cast<Address*>(calloc(150, sizeof(Address)));
+
+		memcpy(Vtable, *reinterpret_cast<Address**>(pDevice), 44 * sizeof(Address));
+		memcpy(Vtable + 44, *reinterpret_cast<Address**>(CommandQueue), 19 * sizeof(Address));
+		memcpy(Vtable + 63, *reinterpret_cast<Address**>(CommandAllocator), 9 * sizeof(Address));
+		memcpy(Vtable + 72, *reinterpret_cast<Address**>(CommandList), 60 * sizeof(Address));
+		memcpy(Vtable + 132, *reinterpret_cast<Address**>(SwapChain), 18 * sizeof(Address));
+
+		Address* pTarget = nullptr;
+
+		pTarget = reinterpret_cast<Address*>(Vtable[54]);
+
+		if (MH_CreateHook(pTarget, hkExecuteCommandLists, (void**)(&oExecuteCommandLists)) == MH_OK)
+			this->HookData.HookList.push_back(pTarget);
+
+		pTarget = reinterpret_cast<Address*>(Vtable[140]);
+
+		if (MH_CreateHook(pTarget, hkPresent_Dx12, (void**)(&oPresent_Dx12)) == MH_OK)
+			this->HookData.HookList.push_back(pTarget);
+
+		pTarget = reinterpret_cast<Address*>(Vtable[145]);
+
+		if (MH_CreateHook(pTarget, hkResizeBuffers, (void**)(&oResizeBuffers)) == MH_OK)
+			this->HookData.HookList.push_back(pTarget);
+
+		pTarget = reinterpret_cast<Address*>(Vtable[146]);
+
+		if (MH_CreateHook(pTarget, hkResizeTarget, (void**)(&oResizeTarget)) == MH_OK)
+			this->HookData.HookList.push_back(pTarget);
+
+		free(Vtable);
+
+		pDevice->Release();
+		CommandQueue->Release();
+		CommandAllocator->Release();
+		CommandList->Release();
+		SwapChain->Release();
+		
+		this->DestroyMyWindow();
 
 		if (MH_EnableHook(MH_ALL_HOOKS) == MH_OK)
 			return true;

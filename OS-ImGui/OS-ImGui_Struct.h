@@ -3,12 +3,16 @@
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_dx11.h"
+#include "imgui/imgui_impl_dx12.h"
 #include "imgui/imgui_internal.h"
 #include <d3d9.h>
+#include <dxgi1_4.h>
 #include <dxgi.h>
+#pragma comment(lib, "d3d12.lib")
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib,"dxgi.lib")
+#include <d3d12.h>
 #include <d3d11.h>
 
 /****************************************************

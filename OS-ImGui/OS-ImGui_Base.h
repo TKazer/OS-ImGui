@@ -27,6 +27,26 @@ namespace OSImGui
 		ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
 		IDXGISwapChain* g_pSwapChain = nullptr;
 		ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
+
+		struct D3D12_
+		{
+			ID3D12Device* pDevice = nullptr;
+			ID3D12DescriptorHeap* pDescriptorHeapBackBuffers;
+			ID3D12DescriptorHeap* pDescriptorHeapImGuiRender;
+			ID3D12GraphicsCommandList* pCommandList;
+			ID3D12CommandQueue* pCommandQueue;
+
+			struct FrameContext_
+			{
+				ID3D12CommandAllocator* pCommandAllocator;
+				ID3D12Resource* pResource;
+				D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHandle;
+			};
+			FrameContext_* FrameContext;
+
+			DWORD BufferCounts = 0;
+		}D3D12;
+
 		bool CreateDeviceD3D(HWND hWnd);
 		void CleanupDeviceD3D();
 		void CreateRenderTarget();
@@ -46,6 +66,7 @@ namespace OSImGui
 	{
 		DX9,
 		DX11,
+		DX12,
 		AUTO
 	};
 

@@ -89,6 +89,9 @@
     <ClInclude Include="imgui\imgui_impl_dx9.h">
       <Filter>sources\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_dx12.h">
+      <Filter>sources\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -143,6 +146,9 @@
       <Filter>sources\MinHook</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui_impl_dx9.cpp">
+      <Filter>sources\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_dx12.cpp">
       <Filter>sources\imgui</Filter>
     </ClCompile>
   </ItemGroup>
