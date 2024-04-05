@@ -9,7 +9,7 @@
 * @author		: Liv
 * @email		: 1319923129@qq.com
 * @version		: 1.1
-* @date			: 2024/4/4 13:59
+* @date			: 2024/4/5 13:00
 ****************************************************/
 
 namespace OSImGui
@@ -31,9 +31,14 @@ namespace OSImGui
 		void Start(HMODULE hLibModule ,std::function<void()> CallBack, DirectXType DxType = DirectXType::AUTO);
 		void ReleaseHook();
 	public:
+		// DirectX 11
 		bool InitDx11(IDXGISwapChain* pSwapChain);
 		void CleanDx11();
 		bool InitDx11Hook();
+		// DirectX 9
+		bool InitDx9(LPDIRECT3DDEVICE9 pDevice);
+		void CleanDx9();
+		bool InitDx9Hook();
 	private:
 		void InitThread();
 		bool CreateMyWindow();

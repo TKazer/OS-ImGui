@@ -1,8 +1,11 @@
 #pragma once
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_dx11.h"
 #include "imgui/imgui_internal.h"
+#include <d3d9.h>
+#include <dxgi.h>
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -13,8 +16,8 @@
 * @file			: OS-ImGui_Struct.h
 * @author		: Liv
 * @email		: 1319923129@qq.com
-* @version		: 1.0
-* @date			: 2023/10/3	23:17
+* @version		: 1.1
+* @date			: 2024/4/5 13:00
 ****************************************************/
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -30,10 +30,10 @@ void DrawCallBack()
 /*
 	NOTICE:
 		If need change to internal mode, please define "OSIMGUI_INTERNAL" in Preprocessing, and change the project to DLL.
-		Only surport for DirectX11 now.
+		Surport for DirectX11 and DirectX9 now.
 	提示：
 		如果需要使用internal版本，请在预处理器中定义 "OSIMGUI_INTERNAL"，并且将项目切换为DLL项目。
-		目前只支持DirectX11。
+		支持DirectX11 & DirectX9。
 */
 
 #ifdef OSIMGUI_INTERNAL
@@ -43,7 +43,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 	{
 		// Entry
-		Gui.Start(hModule, DrawCallBack);
+		Gui.Start(hModule, DrawCallBack,OSImGui::DirectXType::AUTO);
 	}
 	return TRUE;
 }

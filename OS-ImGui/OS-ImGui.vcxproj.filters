@@ -86,6 +86,9 @@
     <ClInclude Include="Minhook\trampoline.h">
       <Filter>sources\MinHook</Filter>
     </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_dx9.h">
+      <Filter>sources\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -138,6 +141,9 @@
     </ClCompile>
     <ClCompile Include="Minhook\trampoline.c">
       <Filter>sources\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_dx9.cpp">
+      <Filter>sources\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
