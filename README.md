@@ -31,7 +31,6 @@ void DrawCallBack()
 		}
 	}ImGui::End();
 }
-
 ~~~
 
 1. External Mode
