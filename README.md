@@ -17,13 +17,35 @@ Chinese -> [README-ZH](https://github.com/TKazer/OS-ImGui/blob/master/README-ZH.
 
 ## Example
 
+~~~ c++
+void DrawCallBack()
+{
+	ImGui::Begin("Menu");
+	{
+		ImGui::Text("This is a text.");
+		if (ImGui::Button("Quit"))
+		{
+			// Using Gui.Quit() to quit the exe or dll.
+			Gui.Quit();
+			//...
+		}
+	}ImGui::End();
+}
+~~~
+
 1. External Mode
 ~~~ c++
 int main()
 {
 	try {
+		/*
+		   New a window for using.
+		*/
 		Gui.NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
-		//Gui.AttachAnotherWindow("Title","", DrawCallBack);
+		/*
+		   Attach to another window by window's name or classname.
+		*/
+		Gui.AttachAnotherWindow("Title","", DrawCallBack);
 	}
 	catch (OSImGui::OSException& e)
 	{
@@ -44,7 +66,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 	{
 		// Entry
-		Gui.Start(hModule, DrawCallBack);
+		// Detect directX type automatically.
+		Gui.Start(hModule, DrawCallBack, OSImGui::DirectXType::AUTO);
 	}
 	return TRUE;
 }

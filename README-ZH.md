@@ -18,13 +18,35 @@ English -> [README-EN](https://github.com/TKazer/OS-ImGui/blob/master/README.md)
 
 ## 示例
 
+~~~ c++
+void DrawCallBack()
+{
+	ImGui::Begin("Menu");
+	{
+		ImGui::Text("This is a text.");
+		if (ImGui::Button("Quit"))
+		{
+			// 使用Gui.Quit()退出程序或者卸载DLL。
+			Gui.Quit();
+			//...
+		}
+	}ImGui::End();
+}
+~~~
+
 1. 外部模式
 ~~~ c++
 int main()
 {
 	try {
+		/*
+		    新建窗口。
+		*/
 		Gui.NewWindow("WindowName", Vec2(500, 500), DrawCallBack);
-		//Gui.AttachAnotherWindow("Title","", DrawCallBack);
+		/*
+		    通过指定窗口名或类名附加到窗口。
+		*/
+		Gui.AttachAnotherWindow("Title","", DrawCallBack);
 	}
 	catch (OSImGui::OSException& e)
 	{
@@ -44,8 +66,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 {
 	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 	{
-		// Entry
-		Gui.Start(hModule, DrawCallBack);
+		// 入口
+		// 自动识别DirectX类型。
+		Gui.Start(hModule, DrawCallBack, OSImGui::DirectXType::AUTO);
 	}
 	return TRUE;
 }
