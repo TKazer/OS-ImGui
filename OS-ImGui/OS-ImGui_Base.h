@@ -67,6 +67,7 @@ namespace OSImGui
 		Vec2 Pos;
 		Vec2 Size;
 		ImColor BgColor{ 255, 255, 255 };
+		bool Transparent = false;
 	};
 
 	class OSImGui_Base
